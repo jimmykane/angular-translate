@@ -2185,22 +2185,22 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
 
       if (!result && result !== '') {
         if ($notFoundIndicatorLeft || $notFoundIndicatorRight) {
-          result = applyNotFoundIndicators(translationId);
-        } else {
-          // Return translation of default interpolator if not found anything.
-          result = defaultInterpolator.interpolate(translationId, interpolateParams, 'filter', sanitizeStrategy);
+          return applyNotFoundIndicators(translationId);
+        }
 
-          // looks like the requested translation id doesn't exists.
-          // Now, if there is a registered handler for missing translations and no
-          // asyncLoader is pending, we execute the handler
-          var missingTranslationHandlerTranslation;
-          if ($missingTranslationHandlerFactory && !pendingLoader) {
-            missingTranslationHandlerTranslation = translateByHandler(translationId, interpolateParams, sanitizeStrategy);
-          }
+        // Return translation of default interpolator if not found anything.
+        result = defaultInterpolator.interpolate(translationId, interpolateParams, 'filter', sanitizeStrategy);
 
-          if ($missingTranslationHandlerFactory && !pendingLoader && missingTranslationHandlerTranslation) {
-            result = missingTranslationHandlerTranslation;
-          }
+        // looks like the requested translation id doesn't exists.
+        // Now, if there is a registered handler for missing translations and no
+        // asyncLoader is pending, we execute the handler
+        var missingTranslationHandlerTranslation;
+        if ($missingTranslationHandlerFactory && !pendingLoader) {
+          missingTranslationHandlerTranslation = translateByHandler(translationId, interpolateParams, sanitizeStrategy);
+        }
+
+        if ($missingTranslationHandlerFactory && !pendingLoader && missingTranslationHandlerTranslation) {
+          result = missingTranslationHandlerTranslation;
         }
       }
 
