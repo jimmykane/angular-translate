@@ -34,6 +34,7 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
     $loaderOptions,
     $notFoundIndicatorLeft,
     $notFoundIndicatorRight,
+    $interpolateNotFound = true,
     $postCompilingEnabled = false,
     $forceAsyncReloadEnabled = false,
     $nestedObjectDelimeter = '.',
@@ -479,6 +480,21 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
     }
     $notFoundIndicatorRight = indicator;
     return this;
+  };
+
+  /**
+   * ngdoc function
+   * @name pascalprecht.translate.$translateProvider#interpolateNotFoundTranslationId
+   * @methodOf pascalprecht.translate.$translateProvider
+   *
+   * @description
+   * Sets whether a not found translation ID should be interpolated or not
+   * This is by default set to false
+   *
+   * @param {boolean} value - Whether to interpolate or not.
+   */
+  this.interpolateNotFoundTranslationId = function (value) {
+    $interpolateNotFound = !(!value);
   };
 
   /**
@@ -1486,7 +1502,7 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
           if ($missingTranslationHandlerFactory && missingTranslationHandlerTranslation) {
             deferred.resolve(missingTranslationHandlerTranslation);
           } else {
-            deferred.reject(applyNotFoundIndicators(translationId));
+            deferred.reject(rejectTranslationId(translationId, interpolateParams, Interpolator, sanitizeStrategy));
           }
         }
       }
@@ -1586,7 +1602,7 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
             .then(function (translation) {
               deferred.resolve(translation);
             }, function (_translationId) {
-              deferred.reject(applyNotFoundIndicators(_translationId));
+              deferred.reject(rejectTranslationId(_translationId, interpolateParams, 'service', sanitizeStrategy));
             });
         } else if ($missingTranslationHandlerFactory && !pendingLoader && missingTranslationHandlerTranslation) {
           // looks like the requested translation id doesn't exists.
@@ -1601,7 +1617,7 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
           if (defaultTranslationText) {
             deferred.resolve(defaultTranslationText);
           } else {
-            deferred.reject(applyNotFoundIndicators(translationId));
+            deferred.reject(rejectTranslationId(translationId, interpolateParams, 'service', sanitizeStrategy));
           }
         }
       }
@@ -1648,7 +1664,7 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
           // asyncLoader is pending, we execute the handler
           result = missingTranslationHandlerTranslation;
         } else {
-          result = applyNotFoundIndicators(translationId);
+          result = rejectTranslationId(translationId, interpolateParams, 'filter', sanitizeStrategy);
         }
       }
 
@@ -1686,6 +1702,16 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
           return translation;
         });
       }
+    };
+
+    var rejectTranslationId = function (translationId, interpolateParams, context, sanitizeStrategy) {
+        if ($interpolateNotFound) {
+          translationId = defaultInterpolator.interpolate(translationId, interpolateParams, context, sanitizeStrategy);
+        }
+        if ($notFoundIndicatorLeft || $notFoundIndicatorRight){
+          translationId = applyNotFoundIndicators(translationId);
+        }
+        return translationId;
     };
 
     /**
@@ -2184,12 +2210,6 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
       }
 
       if (!result && result !== '') {
-        if ($notFoundIndicatorLeft || $notFoundIndicatorRight) {
-          return applyNotFoundIndicators(translationId);
-        }
-
-        // Return translation of default interpolator if not found anything.
-        result = defaultInterpolator.interpolate(translationId, interpolateParams, 'filter', sanitizeStrategy);
 
         // looks like the requested translation id doesn't exists.
         // Now, if there is a registered handler for missing translations and no
@@ -2200,8 +2220,11 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
         }
 
         if ($missingTranslationHandlerFactory && !pendingLoader && missingTranslationHandlerTranslation) {
-          result = missingTranslationHandlerTranslation;
+          return missingTranslationHandlerTranslation;
         }
+
+        // Return translation of default interpolator if not found anything.
+        result = rejectTranslationId(translationId, interpolateParams, 'filter', sanitizeStrategy);
       }
 
       return result;
