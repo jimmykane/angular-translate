@@ -1705,13 +1705,13 @@ function $translate($STORAGE_KEY, $windowProvider, $translateSanitizationProvide
     };
 
     var rejectTranslationId = function (translationId, interpolateParams, context, sanitizeStrategy) {
-        if ($interpolateNotFound) {
-          translationId = defaultInterpolator.interpolate(translationId, interpolateParams, context, sanitizeStrategy);
-        }
-        if ($notFoundIndicatorLeft || $notFoundIndicatorRight){
-          translationId = applyNotFoundIndicators(translationId);
-        }
-        return translationId;
+      if ($interpolateNotFound) {
+        translationId = defaultInterpolator.interpolate(translationId, interpolateParams, context, sanitizeStrategy);
+      }
+      if ($notFoundIndicatorLeft || $notFoundIndicatorRight){
+        translationId = applyNotFoundIndicators(translationId);
+      }
+      return translationId;
     };
 
     /**
